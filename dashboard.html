@@ -1,0 +1,1942 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" width=device-width, initial-scale=1.0">
+    <title>Made in Argentina - Dashboard</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Leaflet Geocoder CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #FFC107;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            transition: transform 0.3s;
+        }
+
+        .sidebar.hidden {
+            transform: translateX(-280px);
+        }
+
+        .sidebar-header {
+            background: linear-gradient(135deg, #0D47A1, #1976D2);
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+        }
+
+        .sidebar-header h1 {
+            font-size: 22px;
+            margin-bottom: 5px;
+        }
+
+        .user-info {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #FFC107;
+            color: #0D47A1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+            margin: 0 auto 10px;
+            border: 3px solid white;
+        }
+
+        .user-type-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            background: #4CAF50;
+            color: white;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .user-type-badge.vendedor {
+            background: #FF9800;
+        }
+
+        .premium-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #000;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-top: 5px;
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        .sidebar-menu {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 0;
+        }
+
+        .menu-item {
+            padding: 15px 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #333;
+            font-size: 15px;
+        }
+
+        .menu-item:hover {
+            background: #f5f5f5;
+            padding-left: 30px;
+        }
+
+        .menu-item.active {
+            background: #FFC107;
+            color: #0D47A1;
+            font-weight: bold;
+            border-left: 4px solid #0D47A1;
+        }
+
+        .menu-item.premium-only {
+            opacity: 0.5;
+        }
+
+        .premium-label {
+            background: #FFD700;
+            color: #000;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 8px;
+            margin-left: auto;
+        }
+
+        .user-switch {
+            padding: 15px 25px;
+            background: #f0f0f0;
+            border-top: 2px solid #ddd;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .switch-btn {
+            width: 100%;
+            padding: 10px;
+            background: #0D47A1;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            margin-bottom: 8px;
+        }
+
+        .switch-btn:hover {
+            background: #1976D2;
+        }
+
+        .premium-btn {
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .premium-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .logout-btn {
+            margin: 20px;
+            padding: 12px;
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .top-bar {
+            background: white;
+            padding: 15px 25px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 999;
+            transition: transform 0.3s;
+        }
+
+        .top-bar.hidden {
+            transform: translateY(-100%);
+        }
+
+        .search-bar {
+            flex: 1;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .mode-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .mode-btn, .config-btn {
+            padding: 10px 20px;
+            border: 2px solid #0D47A1;
+            background: white;
+            color: #0D47A1;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .mode-btn:hover, .config-btn:hover {
+            background: #0D47A1;
+            color: white;
+        }
+
+        /* GPS Circle */
+        .gps-indicator {
+            position: absolute;
+            bottom: 100px;
+            right: 20px;
+            z-index: 500;
+        }
+
+        .gps-circle {
+            width: 60px;
+            height: 60px;
+            background: white;
+            border: 3px solid #0D47A1;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+        }
+
+        .gps-circle:hover {
+            transform: scale(1.1);
+        }
+
+        .gps-circle.active {
+            background: #4CAF50;
+            border-color: #4CAF50;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 5px 15px rgba(76, 175, 80, 0.5); }
+            50% { box-shadow: 0 5px 25px rgba(76, 175, 80, 0.8); }
+        }
+
+        /* Map */
+        #map {
+            flex: 1;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Panels */
+        .mode-panel, .config-panel, .premium-panel {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 900;
+            min-width: 500px;
+            max-width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .mode-panel.active, .config-panel.active, .premium-panel.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translate(-50%, -40%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
+        }
+
+        .panel-header {
+            color: #0D47A1;
+            margin-bottom: 20px;
+            font-size: 24px;
+            text-align: center;
+        }
+
+        .close-panel {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        /* Form Elements */
+        .form-section {
+            margin-bottom: 20px;
+        }
+
+        .form-section label {
+            display: block;
+            color: #666;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .form-section input, .form-section textarea, .form-section select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .form-section input:focus, .form-section textarea:focus, .form-section select:focus {
+            outline: none;
+            border-color: #0D47A1;
+        }
+
+        .form-section textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        /* Address Autocomplete */
+        .address-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #0D47A1;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        .address-suggestions.active {
+            display: block;
+        }
+
+        .suggestion-item {
+            padding: 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.2s;
+        }
+
+        .suggestion-item:hover {
+            background: #f5f5f5;
+        }
+
+        .add-new-address {
+            padding: 12px;
+            background: #FFC107;
+            color: #0D47A1;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        /* Image Upload */
+        .image-upload-area {
+            border: 3px dashed #0D47A1;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f8f8;
+        }
+
+        .image-upload-area:hover {
+            background: #e8f4ff;
+            border-color: #1976D2;
+        }
+
+        .image-upload-area.has-image {
+            border-style: solid;
+            background: white;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .image-specs {
+            font-size: 12px;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        .remove-image {
+            margin-top: 10px;
+            padding: 8px 15px;
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* Speed/Window Controls */
+        .controls-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .control-option {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .control-option:hover {
+            background: #f5f5f5;
+        }
+
+        .control-option.active {
+            background: #FFC107;
+            border-color: #FFC107;
+            color: #0D47A1;
+        }
+
+        .guide-options {
+            margin-bottom: 20px;
+        }
+
+        .guide-option {
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .guide-option:hover {
+            background: #f5f5f5;
+        }
+
+        .guide-option.active {
+            background: #FFC107;
+            border-color: #FFC107;
+            color: #0D47A1;
+            font-weight: bold;
+        }
+
+        .start-btn {
+            width: 100%;
+            padding: 15px;
+            background: #0D47A1;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .start-btn:hover {
+            background: #1976D2;
+        }
+
+        /* Car/Walk Views */
+        .car-view, .walk-view {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: none;
+            z-index: 2000;
+        }
+
+        .car-view.active, .walk-view.active {
+            display: block;
+        }
+
+        .car-interior {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: linear-gradient(to bottom, #1a1a1a 0%, #2d2d2d 100%);
+        }
+
+        .car-window {
+            position: absolute;
+            top: 10%;
+            width: 70%;
+            height: 60%;
+            background: linear-gradient(135deg, #87CEEB 0%, #E0F6FF 100%);
+            border: 15px solid #2d2d2d;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.3);
+        }
+
+        .car-window.left { left: 5%; }
+        .car-window.right { right: 5%; }
+
+        .street-view {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 50%, #C8C8C8 100%);
+        }
+
+        .street-buildings {
+            position: absolute;
+            bottom: 0;
+            width: 200%;
+            height: 70%;
+            animation: walkMove 20s linear infinite;
+        }
+
+        .street-buildings.paused {
+            animation-play-state: paused;
+        }
+
+        @keyframes walkMove {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        .street-buildings.slow { animation-duration: 30s; }
+        .street-buildings.fast { animation-duration: 10s; }
+
+        .building {
+            position: absolute;
+            bottom: 0;
+            width: 200px;
+            background: linear-gradient(to bottom, #B8860B 0%, #8B6914 100%);
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.3);
+        }
+
+        .sidewalk {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 100px;
+            background: repeating-linear-gradient(90deg, #A9A9A9, #A9A9A9 50px, #C0C0C0 50px, #C0C0C0 100px);
+            border-top: 5px solid #696969;
+            z-index: 10;
+        }
+
+        /* Business Bubble */
+        .business-bubble {
+            position: absolute;
+            background: white;
+            border: 4px solid #0D47A1;
+            border-radius: 20px;
+            padding: 20px;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: floatIn 0.5s ease;
+            top: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+        }
+
+        @keyframes floatIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(50px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        .bubble-pointer {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-top: 20px solid #0D47A1;
+        }
+
+        .bubble-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #FFC107;
+        }
+
+        .bubble-icon {
+            font-size: 48px;
+        }
+
+        .bubble-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+
+        .bubble-title {
+            font-size: 22px;
+            font-weight: bold;
+            color: #0D47A1;
+        }
+
+        .bubble-description {
+            font-size: 16px;
+            color: #333;
+            margin: 10px 0;
+            line-height: 1.5;
+        }
+
+        .bubble-owner {
+            font-size: 12px;
+            color: #999;
+            font-style: italic;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #ddd;
+        }
+
+        /* Chatbot */
+        .chatbot-container {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            border: 3px solid #0D47A1;
+            border-radius: 20px;
+            padding: 25px 35px;
+            max-width: 700px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            z-index: 150;
+        }
+
+        .chatbot-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #FFC107;
+        }
+
+        .chatbot-avatar {
+            width: 50px;
+            height: 50px;
+            background: #0D47A1;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+
+        .chatbot-controls {
+            margin-left: auto;
+            display: flex;
+            gap: 10px;
+        }
+
+        .voice-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        .voice-btn.speaking {
+            animation: speaking 0.5s infinite;
+        }
+
+        @keyframes speaking {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .chatbot-message {
+            font-size: 17px;
+            color: #333;
+            line-height: 1.7;
+        }
+
+        .chatbot-business {
+            display: inline-block;
+            background: #FFC107;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-weight: bold;
+            color: #0D47A1;
+            margin-right: 8px;
+        }
+
+        /* Controls */
+        .view-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 200;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid #0D47A1;
+            padding: 12px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #0D47A1;
+            transition: all 0.3s;
+        }
+
+        .control-btn:hover {
+            background: #0D47A1;
+            color: white;
+        }
+
+        .pause-btn {
+            background: #FFC107;
+            border-color: #FFC107;
+        }
+
+        .pause-btn.paused {
+            background: #4CAF50;
+            border-color: #4CAF50;
+            color: white;
+        }
+
+        .exit-btn {
+            background: rgba(244, 67, 54, 0.95);
+            border-color: #f44336;
+            color: white;
+        }
+
+        /* Progress */
+        .route-progress {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 30px;
+            border-radius: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            z-index: 200;
+        }
+
+        .progress-bar {
+            width: 300px;
+            height: 12px;
+            background: #ddd;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #FFC107, #FFD54F);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            text-align: center;
+            font-weight: bold;
+            color: #0D47A1;
+            font-size: 16px;
+        }
+
+        /* Premium Panel */
+        .premium-features {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .premium-feature {
+            padding: 20px;
+            border: 2px solid #FFD700;
+            border-radius: 10px;
+            text-align: center;
+            background: linear-gradient(135deg, #FFF9E5, #FFECB3);
+        }
+
+        .premium-feature-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .premium-price {
+            font-size: 32px;
+            font-weight: bold;
+            color: #0D47A1;
+            margin: 20px 0;
+        }
+
+        .subscribe-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s;
+        }
+
+        .subscribe-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* Configuration Panel */
+        .config-section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f8f8f8;
+            border-radius: 10px;
+        }
+
+        .config-section h4 {
+            color: #0D47A1;
+            margin-bottom: 15px;
+        }
+
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+        }
+
+        .switch {
+            position: relative;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #4CAF50;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h1>🇦🇷 Made in Argentina</h1>
+                <div class="user-info">
+                    <div class="user-avatar">M</div>
+                    <div class="user-name">Martín</div>
+                    <div class="user-type-badge" id="userTypeBadge">Comprador</div>
+                    <div class="premium-badge" id="premiumBadge" style="display: none;">⭐ PREMIUM</div>
+                    <div style="margin-top: 10px; color: white;">⭐ <span id="userPoints">350</span> puntos</div>
+                </div>
+            </div>
+
+            <div class="user-switch">
+                <button class="switch-btn" onclick="switchUserType()">
+                    <span id="switchText">🏪 Cambiar a Vendedor</span>
+                </button>
+                <button class="premium-btn" onclick="showPremium()">
+                    ⭐ Obtener Premium
+                </button>
+            </div>
+
+            <div class="sidebar-menu">
+                <div class="menu-item active">
+                    <span>🏪</span>
+                    <span>Vendedores Cercanos</span>
+                </div>
+                <div class="menu-item">
+                    <span>💰</span>
+                    <span>Ofertas del Barrio</span>
+                </div>
+                <div class="menu-item">
+                    <span>❤️</span>
+                    <span>Favoritos</span>
+                </div>
+                <div class="menu-item">
+                    <span>📍</span>
+                    <span>Mis Recorridos</span>
+                </div>
+                <div class="menu-item premium-only" id="analyticsMenu" style="display: none;">
+                    <span>📊</span>
+                    <span>Análisis Avanzado</span>
+                    <span class="premium-label">PREMIUM</span>
+                </div>
+                <div class="menu-item" id="myBusinessMenu" style="display: none;">
+                    <span>🏪</span>
+                    <span>Mi Negocio</span>
+                </div>
+                <div class="menu-item" id="createAdMenu" style="display: none;" onclick="createAdvertisement()">
+                    <span>➕</span>
+                    <span>Crear Publicidad</span>
+                </div>
+            </div>
+
+            <button class="logout-btn" onclick="logout()">🚪 Salir</button>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="top-bar" id="topBar">
+                <div class="search-bar">
+                    <input type="text" placeholder="Buscar negocios...">
+                </div>
+                <div class="mode-buttons">
+                    <button class="config-btn" onclick="showConfig()">⚙️ Configuración</button>
+                    <button class="mode-btn" onclick="showWalkConfig()">🚶 Modo Caminar</button>
+                    <button class="mode-btn" onclick="showCarConfig()">🚗 Modo Auto</button>
+                </div>
+            </div>
+
+            <div id="map"></div>
+
+            <!-- GPS Indicator -->
+            <div class="gps-indicator">
+                <div class="gps-circle" id="gpsCircle" onclick="toggleGPS()">
+                    📍
+                </div>
+            </div>
+
+            <!-- Configuration Panel -->
+            <div id="configPanel" class="config-panel">
+                <button class="close-panel" onclick="closePanel('configPanel')">×</button>
+                <h3 class="panel-header">⚙️ Configuración</h3>
+                
+                <div class="config-section">
+                    <h4>🔊 Audio y Voz</h4>
+                    <div class="toggle-switch">
+                        <span>Activar voz del chatbot</span>
+                        <label class="switch">
+                            <input type="checkbox" id="voiceEnabled" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="form-section">
+                        <label>Velocidad de voz:</label>
+                        <select id="voiceSpeed">
+                            <option value="0.8">Lento</option>
+                            <option value="1" selected>Normal</option>
+                            <option value="1.2">Rápido</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="config-section">
+                    <h4>🗺️ Mapa</h4>
+                    <div class="toggle-switch">
+                        <span>Seguimiento GPS automático</span>
+                        <label class="switch">
+                            <input type="checkbox" id="autoGPS" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="toggle-switch">
+                        <span>Mostrar radio de alcance</span>
+                        <label class="switch">
+                            <input type="checkbox" id="showRadius">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="config-section" id="vendorConfig" style="display: none;">
+                    <h4>🏪 Configuración de Vendedor</h4>
+                    <div class="toggle-switch">
+                        <span>Notificaciones de clientes cercanos</span>
+                        <label class="switch">
+                            <input type="checkbox" id="clientNotif">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="toggle-switch">
+                        <span>Mostrar estadísticas en tiempo real</span>
+                        <label class="switch">
+                            <input type="checkbox" id="realtimeStats">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <button class="start-btn" onclick="saveConfig()">💾 Guardar Configuración</button>
+            </div>
+
+            <!-- Premium Panel -->
+            <div id="premiumPanel" class="premium-panel">
+                <button class="close-panel" onclick="closePanel('premiumPanel')">×</button>
+                <h3 class="panel-header">⭐ Made in Argentina PREMIUM</h3>
+                
+                <div class="premium-price">$9.99/mes</div>
+                
+                <div class="premium-features">
+                    <div class="premium-feature">
+                        <div class="premium-feature-icon">📊</div>
+                        <strong>Análisis Avanzado</strong>
+                        <p style="font-size: 13px; margin-top: 8px;">Estadísticas detalladas de tus visitas</p>
+                    </div>
+                    <div class="premium-feature">
+                        <div class="premium-feature-icon">🎯</div>
+                        <strong>Publicidad Prioritaria</strong>
+                        <p style="font-size: 13px; margin-top: 8px;">Tu negocio aparece primero</p>
+                    </div>
+                    <div class="premium-feature">
+                        <div class="premium-feature-icon">📸</div>
+                        <strong>Imágenes Ilimitadas</strong>
+                        <p style="font-size: 13px; margin-top: 8px;">Sube hasta 10 fotos por negocio</p>
+                    </div>
+                    <div class="premium-feature">
+                        <div class="premium-feature-icon">🔔</div>
+                        <strong>Notificaciones Premium</strong>
+                        <p style="font-size: 13px; margin-top: 8px;">Alertas de clientes en tiempo real</p>
+                    </div>
+                    <div class="premium-feature">
+                        <div class="premium-feature-icon">🎨</div>
+                        <strong>Personalización Total</strong>
+                        <p style="font-size: 13px; margin-top: 8px;">Colores y diseño personalizados</p>
+                    </div>
+                    <div class="premium-feature">
+                        <div class="premium-feature-icon">💬</div>
+                        <strong>Chat Directo</strong>
+                        <p style="font-size: 13px; margin-top: 8px;">Habla con tus clientes en la app</p>
+                    </div>
+                    <div class="premium-feature">
+                        <div class="premium-feature-icon">🏆</div>
+                        <strong>Badge Premium</strong>
+                        <p style="font-size: 13px; margin-top: 8px;">Destaca como negocio verificado</p>
+                    </div>
+                    <div class="premium-feature">
+                        <div class="premium-feature-icon">📱</div>
+                        <strong>Sin Publicidad</strong>
+                        <p style="font-size: 13px; margin-top: 8px;">Experiencia sin interrupciones</p>
+                    </div>
+                </div>
+
+                <button class="subscribe-btn" onclick="subscribePremium()">
+                    🌟 Suscribirse Ahora - $9.99/mes
+                </button>
+                
+                <p style="text-align: center; margin-top: 15px; color: #666; font-size: 13px;">
+                    Cancela cuando quieras • Primera semana gratis
+                </p>
+            </div>
+
+            <!-- Walk Config Panel -->
+            <div id="walkPanel" class="mode-panel">
+                <button class="close-panel" onclick="closePanel('walkPanel')">×</button>
+                <h3 class="panel-header">🚶 Configurar Modo Caminar</h3>
+                
+                <div class="form-section">
+                    <label>📍 Punto de partida:</label>
+                    <div style="position: relative;">
+                        <input type="text" id="walkStart" placeholder="Buscar dirección..." autocomplete="off" oninput="searchAddress(this, 'walkStartSuggestions')">
+                        <div id="walkStartSuggestions" class="address-suggestions"></div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <label>🎯 Punto de llegada:</label>
+                    <div style="position: relative;">
+                        <input type="text" id="walkEnd" placeholder="Buscar dirección..." autocomplete="off" oninput="searchAddress(this, 'walkEndSuggestions')">
+                        <div id="walkEndSuggestions" class="address-suggestions"></div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <label>⚡ Velocidad de caminata:</label>
+                    <div class="controls-group">
+                        <div class="control-option" onclick="selectSpeed('slow')">🐌 Lento</div>
+                        <div class="control-option active" onclick="selectSpeed('medium')">🚶 Medio</div>
+                        <div class="control-option" onclick="selectSpeed('fast')">🏃 Rápido</div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <label>🤖 Tipo de guía:</label>
+                    <div class="guide-options">
+                        <div class="guide-option active" onclick="selectGuide('chatbot')">
+                            <strong>💬 Chatbot Guía con Voz</strong>
+                            <small>El asistente te narra sobre los negocios (se puede pausar)</small>
+                        </div>
+                        <div class="guide-option" onclick="selectGuide('bubbles')">
+                            <strong>💭 Solo Carteles Silenciosos</strong>
+                            <small>Burbujas informativas sin audio</small>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="start-btn" onclick="startWalking()">▶️ Iniciar Recorrido</button>
+            </div>
+
+            <!-- Car Config Panel -->
+            <div id="carPanel" class="mode-panel">
+                <button class="close-panel" onclick="closePanel('carPanel')">×</button>
+                <h3 class="panel-header">🚗 Configurar Modo Auto</h3>
+                
+                <div class="form-section">
+                    <label>📍 Punto de partida:</label>
+                    <div style="position: relative;">
+                        <input type="text" id="carStart" placeholder="Buscar dirección..." autocomplete="off" oninput="searchAddress(this, 'carStartSuggestions')">
+                        <div id="carStartSuggestions" class="address-suggestions"></div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <label>🎯 Punto de llegada:</label>
+                    <div style="position: relative;">
+                        <input type="text" id="carEnd" placeholder="Buscar dirección..." autocomplete="off" oninput="searchAddress(this, 'carEndSuggestions')">
+                        <div id="carEndSuggestions" class="address-suggestions"></div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <label>🪟 Ventana del auto:</label>
+                    <div class="controls-group">
+                        <div class="control-option active" onclick="selectWindow('left')">⬅️ Izquierda</div>
+                        <div class="control-option" onclick="selectWindow('right')">➡️ Derecha</div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <label>🤖 Tipo de guía:</label>
+                    <div class="guide-options">
+                        <div class="guide-option active" onclick="selectCarGuide('chatbot')">
+                            <strong>💬 Chatbot Guía con Voz</strong>
+                            <small>El asistente te narra sobre los negocios</small>
+                        </div>
+                        <div class="guide-option" onclick="selectCarGuide('bubbles')">
+                            <strong>💭 Solo Carteles Silenciosos</strong>
+                            <small>Burbujas informativas sin audio</small>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="start-btn" onclick="startDriving()">▶️ Iniciar Recorrido</button>
+            </div>
+
+            <!-- Create Ad Panel -->
+            <div id="adPanel" class="mode-panel">
+                <button class="close-panel" onclick="closePanel('adPanel')">×</button>
+                <h3 class="panel-header">➕ Crear Publicidad</h3>
+                
+                <div class="form-section">
+                    <label>🏪 Nombre del Negocio:</label>
+                    <input type="text" id="adName" placeholder="Ej: Panadería El Buen Pan">
+                </div>
+
+                <div class="form-section">
+                    <label>📂 Categoría:</label>
+                    <select id="adCategory">
+                        <option>Panadería</option>
+                        <option>Carnicería</option>
+                        <option>Verdulería</option>
+                        <option>Almacén</option>
+                        <option>Heladería</option>
+                        <option>Cafetería</option>
+                        <option>Librería</option>
+                        <option>Ferretería</option>
+                        <option>Farmacia</option>
+                        <option>Ropa</option>
+                        <option>Electrónica</option>
+                        <option>Otro</option>
+                    </select>
+                </div>
+
+                <div class="form-section">
+                    <label>📝 Descripción:</label>
+                    <textarea id="adDescription" placeholder="Describe qué ofreces..."></textarea>
+                </div>
+
+                <div class="form-section">
+                    <label>📍 Dirección:</label>
+                    <div style="position: relative;">
+                        <input type="text" id="adAddress" placeholder="Buscar dirección..." autocomplete="off" oninput="searchAddress(this, 'adAddressSuggestions')">
+                        <div id="adAddressSuggestions" class="address-suggestions"></div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <label>😊 Icono:</label>
+                    <select id="adIcon">
+                        <option value="🥖">🥖 Pan</option>
+                        <option value="🥩">🥩 Carne</option>
+                        <option value="🥬">🥬 Verduras</option>
+                        <option value="🏪">🏪 Tienda</option>
+                        <option value="🍦">🍦 Helado</option>
+                        <option value="☕">☕ Café</option>
+                        <option value="📚">📚 Libros</option>
+                        <option value="🔧">🔧 Ferretería</option>
+                        <option value="💊">💊 Farmacia</option>
+                        <option value="👕">👕 Ropa</option>
+                    </select>
+                </div>
+
+                <div class="form-section">
+                    <label>📸 Imagen del Negocio:</label>
+                    <div class="image-upload-area" id="imageUploadArea" onclick="document.getElementById('imageInput').click()">
+                        <div id="uploadPrompt">
+                            <div style="font-size: 48px; margin-bottom: 10px;">📷</div>
+                            <strong>Haz clic para subir imagen</strong>
+                            <div class="image-specs">
+                                ✅ Formatos: JPG, PNG, WEBP<br>
+                                ✅ Tamaño máximo: 5 MB<br>
+                                ✅ Resolución recomendada: 1200x800 px<br>
+                                ✅ Relación de aspecto: 3:2 o 16:9
+                            </div>
+                        </div>
+                        <img id="imagePreview" class="image-preview" style="display: none;">
+                        <input type="file" id="imageInput" accept="image/jpeg,image/png,image/webp" style="display: none;" onchange="handleImageUpload(this)">
+                    </div>
+                    <button id="removeImageBtn" class="remove-image" style="display: none;" onclick="removeImage()">🗑️ Eliminar Imagen</button>
+                </div>
+
+                <button class="start-btn" onclick="saveAdvertisement()">💾 Guardar Publicidad</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Walk View -->
+    <div class="walk-view" id="walkView">
+        <div class="street-view">
+            <div class="street-buildings" id="streetBuildings"></div>
+            <div class="sidewalk"></div>
+        </div>
+
+        <div class="route-progress">
+            <div class="progress-text" id="walkProgress">Caminando... 0%</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="walkProgressBar"></div>
+            </div>
+        </div>
+
+        <div class="chatbot-container" id="walkChatbot">
+            <div class="chatbot-header">
+                <div class="chatbot-avatar">🤖</div>
+                <div>
+                    <div class="chatbot-name">Guía Virtual Argentina</div>
+                </div>
+                <div class="chatbot-controls">
+                    <button class="voice-btn" id="walkVoiceBtn" onclick="toggleVoice('walk')">🔊</button>
+                </div>
+            </div>
+            <div class="chatbot-message" id="walkChatMessage">
+                Comenzando recorrido...
+            </div>
+        </div>
+
+        <div class="view-controls">
+            <button class="control-btn pause-btn" id="walkPauseBtn" onclick="togglePause('walk')">⏸️ Pausar</button>
+            <button class="control-btn exit-btn" onclick="exitWalkView()">❌ Salir</button>
+        </div>
+    </div>
+
+    <!-- Car View -->
+    <div class="car-view" id="carView">
+        <div class="car-interior">
+            <div class="car-window" id="carWindow">
+                <div class="window-content">
+                    <div class="street-scene"></div>
+                </div>
+            </div>
+            <div class="car-dashboard"></div>
+        </div>
+
+        <div class="route-progress">
+            <div class="progress-text" id="carProgress">Conduciendo... 0%</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="carProgressBar"></div>
+            </div>
+        </div>
+
+        <div class="chatbot-container" id="carChatbot">
+            <div class="chatbot-header">
+                <div class="chatbot-avatar">🤖</div>
+                <div>
+                    <div class="chatbot-name">Guía Virtual Argentina</div>
+                </div>
+                <div class="chatbot-controls">
+                    <button class="voice-btn" id="carVoiceBtn" onclick="toggleVoice('car')">🔊</button>
+                </div>
+            </div>
+            <div class="chatbot-message" id="carChatMessage">
+                Comenzando recorrido...
+            </div>
+        </div>
+
+        <div class="view-controls">
+            <button class="control-btn pause-btn" id="carPauseBtn" onclick="togglePause('car')">⏸️ Pausar</button>
+            <button class="control-btn exit-btn" onclick="exitCarView()">❌ Salir</button>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
+    <script>
+        let map;
+        let userType = 'comprador';
+        let isPremium = false;
+        let selectedSpeed = 'medium';
+        let selectedWindow = 'left';
+        let selectedGuide = 'chatbot';
+        let selectedCarGuide = 'chatbot';
+        let gpsActive = false;
+        let gpsCircle = null;
+        let watchId = null;
+        let isPaused = false;
+        let voiceEnabled = true;
+        let currentUtterance = null;
+        let uploadedImage = null;
+
+        const businesses = [
+            { name: "Panadería Don Juan", category: "Panadería", lat: -34.6037, lng: -58.3816, description: "Pan artesanal recién horneado todos los días", icon: "🥖", owner: "Juan Pérez", image: null },
+            { name: "Carnicería El Gaucho", category: "Carnicería", lat: -34.6047, lng: -58.3826, description: "Cortes premium de carne argentina", icon: "🥩", owner: "Roberto Gómez", image: null },
+            { name: "Verdulería La Huerta", category: "Verdulería", lat: -34.6027, lng: -58.3806, description: "Frutas y verduras frescas", icon: "🥬", owner: "María López", image: null }
+        ];
+
+        // Direcciones de ejemplo para autocompletado
+        const sampleAddresses = [
+            "Av. Corrientes 1000, Buenos Aires",
+            "Av. Santa Fe 2000, Buenos Aires",
+            "Av. 9 de Julio 500, Buenos Aires",
+            "Calle Florida 800, Buenos Aires",
+            "Av. Rivadavia 3000, Buenos Aires",
+            "Puerto Madero, Buenos Aires",
+            "Palermo, Buenos Aires",
+            "Recoleta, Buenos Aires"
+        ];
+
+        // Initialize map
+        function initMap() {
+            const buenosAires = [-34.6037, -58.3816];
+            map = L.map('map').setView(buenosAires, 15);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
+
+            const userIcon = L.divIcon({
+                html: '<div style="background: #0D47A1; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.3);"></div>',
+                iconSize: [20, 20]
+            });
+
+            L.marker(buenosAires, { icon: userIcon }).addTo(map).bindPopup("📍 Tu ubicación");
+
+            businesses.forEach(business => {
+                const icon = L.divIcon({
+                    html: `<div style="background: #FFC107; border: 3px solid #0D47A1; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">${business.icon}</div>`,
+                    iconSize: [40, 40]
+                });
+
+                L.marker([business.lat, business.lng], { icon }).addTo(map)
+                    .bindPopup(`<b>${business.icon} ${business.name}</b><br><small>${business.category}</small><br>${business.description}<br><i>Por: ${business.owner}</i>`);
+            });
+        }
+
+        // Address autocomplete
+        function searchAddress(input, suggestionsId) {
+            const value = input.value.toLowerCase();
+            const suggestions = document.getElementById(suggestionsId);
+            
+            if (value.length < 2) {
+                suggestions.classList.remove('active');
+                return;
+            }
+
+            const matches = sampleAddresses.filter(addr => 
+                addr.toLowerCase().includes(value)
+            );
+
+            if (matches.length > 0) {
+                suggestions.innerHTML = matches.map(addr => 
+                    `<div class="suggestion-item" onclick="selectAddress('${addr}', '${input.id}', '${suggestionsId}')">${addr}</div>`
+                ).join('');
+                suggestions.innerHTML += `<div class="add-new-address" onclick="addNewAddress('${input.id}', '${suggestionsId}')">➕ Agregar "${value}" como nueva dirección</div>`;
+                suggestions.classList.add('active');
+            } else {
+                suggestions.innerHTML = `<div class="add-new-address" onclick="addNewAddress('${input.id}', '${suggestionsId}')">➕ Agregar "${value}" como nueva dirección</div>`;
+                suggestions.classList.add('active');
+            }
+        }
+
+        function selectAddress(address, inputId, suggestionsId) {
+            document.getElementById(inputId).value = address;
+            document.getElementById(suggestionsId).classList.remove('active');
+        }
+
+        function addNewAddress(inputId, suggestionsId) {
+            const value = document.getElementById(inputId).value;
+            sampleAddresses.push(value + ", Buenos Aires");
+            document.getElementById(inputId).value = value;
+            document.getElementById(suggestionsId).classList.remove('active');
+            alert(`✅ Dirección "${value}" agregada correctamente`);
+        }
+
+        // Image upload
+        function handleImageUpload(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            // Validate file type
+            const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+            if (!validTypes.includes(file.type)) {
+                alert('❌ Formato no válido. Solo JPG, PNG o WEBP');
+                return;
+            }
+
+            // Validate file size (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('❌ La imagen es muy grande. Máximo 5 MB');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                uploadedImage = e.target.result;
+                document.getElementById('imagePreview').src = uploadedImage;
+                document.getElementById('imagePreview').style.display = 'block';
+                document.getElementById('uploadPrompt').style.display = 'none';
+                document.getElementById('imageUploadArea').classList.add('has-image');
+                document.getElementById('removeImageBtn').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeImage() {
+            uploadedImage = null;
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('uploadPrompt').style.display = 'block';
+            document.getElementById('imageUploadArea').classList.remove('has-image');
+            document.getElementById('removeImageBtn').style.display = 'none';
+            document.getElementById('imageInput').value = '';
+        }
+
+        // GPS Toggle
+        function toggleGPS() {
+            gpsActive = !gpsActive;
+            const circle = document.getElementById('gpsCircle');
+            
+            if (gpsActive) {
+                circle.classList.add('active');
+                startGPSTracking();
+            } else {
+                circle.classList.remove('active');
+                stopGPSTracking();
+            }
+        }
+
+        function startGPSTracking() {
+            if (navigator.geolocation) {
+                watchId = navigator.geolocation.watchPosition(
+                    (position) => {
+                        const pos = [position.coords.latitude, position.coords.longitude];
+                        map.setView(pos, 15);
+                        
+                        if (gpsCircle) {
+                            map.removeLayer(gpsCircle);
+                        }
+                        
+                        gpsCircle = L.circle(pos, {
+                            color: '#4CAF50',
+                            fillColor: '#4CAF50',
+                            fillOpacity: 0.2,
+                            radius: position.coords.accuracy
+                        }).addTo(map);
+                    },
+                    (error) => {
+                        console.error('GPS Error:', error);
+                        alert('⚠️ No se pudo obtener la ubicación GPS');
+                    },
+                    { enableHighAccuracy: true, maximumAge: 0 }
+                );
+            }
+        }
+
+        function stopGPSTracking() {
+            if (watchId) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+            if (gpsCircle) {
+                map.removeLayer(gpsCircle);
+                gpsCircle = null;
+            }
+        }
+
+        // User type switch
+        function switchUserType() {
+            userType = userType === 'comprador' ? 'vendedor' : 'comprador';
+            
+            const badge = document.getElementById('userTypeBadge');
+            const switchText = document.getElementById('switchText');
+            const myBusinessMenu = document.getElementById('myBusinessMenu');
+            const createAdMenu = document.getElementById('createAdMenu');
+            const vendorConfig = document.getElementById('vendorConfig');
+            
+            if (userType === 'vendedor') {
+                badge.textContent = 'Vendedor';
+                badge.classList.add('vendedor');
+                switchText.textContent = '🛒 Cambiar a Comprador';
+                myBusinessMenu.style.display = 'flex';
+                createAdMenu.style.display = 'flex';
+                if (vendorConfig) vendorConfig.style.display = 'block';
+            } else {
+                badge.textContent = 'Comprador';
+                badge.classList.remove('vendedor');
+                switchText.textContent = '🏪 Cambiar a Vendedor';
+                myBusinessMenu.style.display = 'none';
+                createAdMenu.style.display = 'none';
+                if (vendorConfig) vendorConfig.style.display = 'none';
+            }
+        }
+
+        // Premium
+        function showPremium() {
+            document.getElementById('premiumPanel').classList.add('active');
+        }
+
+        function subscribePremium() {
+            if (confirm('¿Deseas suscribirte a Made in Argentina Premium por $9.99/mes?\n\nPrimera semana GRATIS')) {
+                isPremium = true;
+                document.getElementById('premiumBadge').style.display = 'inline-block';
+                document.getElementById('analyticsMenu').style.display = 'flex';
+                document.getElementById('analyticsMenu').classList.remove('premium-only');
+                closePanel('premiumPanel');
+                alert('🎉 ¡Bienvenido a Premium!\n\nAhora tienes acceso a todas las funciones premium.');
+            }
+        }
+
+        // Config
+        function showConfig() {
+            document.getElementById('configPanel').classList.add('active');
+        }
+
+        function saveConfig() {
+            voiceEnabled = document.getElementById('voiceEnabled').checked;
+            alert('✅ Configuración guardada correctamente');
+            closePanel('configPanel');
+        }
+
+        // Panels
+        function closePanel(panelId) {
+            document.getElementById(panelId).classList.remove('active');
+        }
+
+        function showWalkConfig() {
+            document.getElementById('walkPanel').classList.add('active');
+        }
+
+        function showCarConfig() {
+            document.getElementById('carPanel').classList.add('active');
+        }
+
+        function createAdvertisement() {
+            document.getElementById('adPanel').classList.add('active');
+        }
+
+        function saveAdvertisement() {
+            const name = document.getElementById('adName').value;
+            const description = document.getElementById('adDescription').value;
+            const address = document.getElementById('adAddress').value;
+
+            if (!name || !description || !address) {
+                alert('⚠️ Por favor completa todos los campos obligatorios');
+                return;
+            }
+
+            if (!uploadedImage) {
+                if (!confirm('No has subido una imagen. ¿Deseas continuar sin imagen?')) {
+                    return;
+                }
+            }
+
+            alert(`✅ ¡Publicidad creada!\n\n${name}\n${description}\n📍 ${address}\n\nTu negocio ahora es visible en el mapa.`);
+            closePanel('adPanel');
+            
+            // Reset
+            document.getElementById('adName').value = '';
+            document.getElementById('adDescription').value = '';
+            document.getElementById('adAddress').value = '';
+            removeImage();
+        }
+
+        // Controls
+        function selectSpeed(speed) {
+            selectedSpeed = speed;
+            document.querySelectorAll('#walkPanel .control-option').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function selectWindow(window) {
+            selectedWindow = window;
+            document.querySelectorAll('#carPanel .controls-group .control-option').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function selectGuide(guide) {
+            selectedGuide = guide;
+            document.querySelectorAll('#walkPanel .guide-option').forEach(opt => opt.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function selectCarGuide(guide) {
+            selectedCarGuide = guide;
+            document.querySelectorAll('#carPanel .guide-option').forEach(opt => opt.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        // Voice
+        function speak(text) {
+            if (!voiceEnabled || !('speechSynthesis' in window)) return;
+
+            // Stop current speech
+            window.speechSynthesis.cancel();
+
+            currentUtterance = new SpeechSynthesisUtterance(text);
+            currentUtterance.lang = 'es-AR';
+            currentUtterance.rate = parseFloat(document.getElementById('voiceSpeed')?.value || 1);
+            
+            window.speechSynthesis.speak(currentUtterance);
+        }
+
+        function toggleVoice(mode) {
+            voiceEnabled = !voiceEnabled;
+            const btn = document.getElementById(mode + 'VoiceBtn');
+            btn.textContent = voiceEnabled ? '🔊' : '🔇';
+            
+            if (!voiceEnabled) {
+                window.speechSynthesis.cancel();
+                btn.classList.remove('speaking');
+            }
+        }
+
+        // Pause
+        function togglePause(mode) {
+            isPaused = !isPaused;
+            const btn = document.getElementById(mode + 'PauseBtn');
+            const buildings = document.getElementById('streetBuildings');
+            
+            if (isPaused) {
+                btn.textContent = '▶️ Reanudar';
+                btn.classList.add('paused');
+                if (buildings) buildings.classList.add('paused');
+                window.speechSynthesis.pause();
+            } else {
+                btn.textContent = '⏸️ Pausar';
+                btn.classList.remove('paused');
+                if (buildings) buildings.classList.remove('paused');
+                window.speechSynthesis.resume();
+            }
+        }
+
+        // Start modes
+        function startWalking() {
+            const start = document.getElementById('walkStart').value;
+            const end = document.getElementById('walkEnd').value;
+
+            if (!start || !end) {
+                alert('⚠️ Por favor ingresa ambas direcciones');
+                return;
+            }
+
+            closePanel('walkPanel');
+            document.getElementById('sidebar').classList.add('hidden');
+            document.getElementById('topBar').classList.add('hidden');
+            document.getElementById('walkView').classList.add('active');
+
+            // Buildings
+            const container = document.getElementById('streetBuildings');
+            container.innerHTML = '';
+            for (let i = 0; i < 20; i++) {
+                const building = document.createElement('div');
+                building.className = 'building';
+                building.style.left = `${i * 250}px`;
+                building.style.height = `${200 + Math.random() * 200}px`;
+                container.appendChild(building);
+            }
+            container.className = `street-buildings ${selectedSpeed}`;
+
+            if (selectedGuide === 'chatbot') {
+                document.getElementById('walkChatbot').style.display = 'block';
+                simulateChatbot('walk');
+            } else {
+                document.getElementById('walkChatbot').style.display = 'none';
+                setTimeout(() => showBubble('walk'), 3000);
+            }
+
+            simulateProgress('walk');
+        }
+
+        function startDriving() {
+            const start = document.getElementById('carStart').value;
+            const end = document.getElementById('carEnd').value;
+
+            if (!start || !end) {
+                alert('⚠️ Por favor ingresa ambas direcciones');
+                return;
+            }
+
+            closePanel('carPanel');
+            document.getElementById('sidebar').classList.add('hidden');
+            document.getElementById('topBar').classList.add('hidden');
+            document.getElementById('carView').classList.add('active');
+
+            document.getElementById('carWindow').className = `car-window ${selectedWindow}`;
+
+            if (selectedCarGuide === 'chatbot') {
+                document.getElementById('carChatbot').style.display = 'block';
+                simulateChatbot('car');
+            } else {
+                document.getElementById('carChatbot').style.display = 'none';
+                setTimeout(() => showBubble('car'), 3000);
+            }
+
+            simulateProgress('car');
+        }
+
+        // Chatbot simulation
+        function simulateChatbot(mode) {
+            const messages = [
+                "Comenzando tu recorrido por Buenos Aires",
+                `${businesses[0].icon} ${businesses[0].name}: ${businesses[0].description}. Por ${businesses[0].owner}`,
+                `${businesses[1].icon} ${businesses[1].name}: ${businesses[1].description}. Por ${businesses[1].owner}`,
+                `${businesses[2].icon} ${businesses[2].name}: ${businesses[2].description}. Por ${businesses[2].owner}`,
+                "¡Disfruta tu recorrido por la ciudad! 🇦🇷"
+            ];
+
+            let index = 0;
+            const msgElement = document.getElementById(mode + 'ChatMessage');
+            const voiceBtn = document.getElementById(mode + 'VoiceBtn');
+
+            function showNext() {
+                if (index < messages.length) {
+                    msgElement.innerHTML = messages[index];
+                    
+                    if (voiceEnabled) {
+                        voiceBtn.classList.add('speaking');
+                        speak(messages[index]);
+                        setTimeout(() => voiceBtn.classList.remove('speaking'), 3000);
+                    }
+                    
+                    index++;
+                    setTimeout(showNext, 5000);
+                }
+            }
+            
+            showNext();
+        }
+
+        // Bubble simulation
+        function showBubble(mode) {
+            const business = businesses[Math.floor(Math.random() * businesses.length)];
+            const bubble = document.createElement('div');
+            bubble.className = 'business-bubble';
+            bubble.innerHTML = `
+                <div class="bubble-pointer"></div>
+                <div class="bubble-header">
+                    <div class="bubble-icon">${business.icon}</div>
+                    <div>
+                        <div class="bubble-title">${business.name}</div>
+                        <div style="color: #666; font-size: 14px;">${business.category}</div>
+                    </div>
+                </div>
+                ${business.image ? `<img src="${business.image}" class="bubble-image">` : ''}
+                <div class="bubble-description">${business.description}</div>
+                <div class="bubble-owner">👤 Negocio de ${business.owner}</div>
+            `;
+
+            const container = mode === 'walk' ? document.querySelector('#walkView .street-view') : document.getElementById('carWindow');
+            container.appendChild(bubble);
+
+            setTimeout(() => bubble.remove(), 5000);
+            setTimeout(() => showBubble(mode), 7000);
+        }
+
+        // Progress
+        function simulateProgress(mode) {
+            let progress = 0;
+            const interval = setInterval(() => {
+                if (!isPaused) {
+                    progress += 2;
+                    document.getElementById(mode + 'ProgressBar').style.width = progress + '%';
+                    document.getElementById(mode + 'Progress').textContent = 
+                        mode === 'walk' ? `Caminando... ${progress}%` : `Conduciendo... ${progress}%`;
+                    
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        document.getElementById(mode + 'Progress').textContent = '¡Llegaste! 🎉';
+                        speak('Has llegado a tu destino');
+                    }
+                }
+            }, 500);
+        }
+
+        // Exit
+        function exitWalkView() {
+            document.getElementById('walkView').classList.remove('active');
+            document.getElementById('sidebar').classList.remove('hidden');
+            document.getElementById('topBar').classList.remove('hidden');
+            window.speechSynthesis.cancel();
+            isPaused = false;
+        }
+
+        function exitCarView() {
+            document.getElementById('carView').classList.remove('active');
+            document.getElementById('sidebar').classList.remove('hidden');
+            document.getElementById('topBar').classList.remove('hidden');
+            window.speechSynthesis.cancel();
+            isPaused = false;
+        }
+
+        function logout() {
+            if (confirm('¿Salir?')) window.location.href = 'index.html';
+        }
+
+        window.onload = initMap;
+    </script>
+</body>
+</html>

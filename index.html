@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Made in Argentina</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: #FFC107;
+            color: #0D47A1;
+        }
+
+        /* HEADER */
+        .header {
+            background: #FFC107;
+            padding: 20px 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: white;
+            letter-spacing: 1px;
+        }
+
+        .logo-badge {
+            background: #0D47A1;
+            color: white;
+            padding: 8px 25px;
+            border-radius: 30px;
+            display: inline-block;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn-ingresar {
+            background: white;
+            color: #0D47A1;
+            border: 2px solid #0D47A1;
+            padding: 12px 35px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-ingresar:hover {
+            background: #f5f5f5;
+        }
+
+        .btn-crear {
+            background: #0D47A1;
+            color: white;
+            border: none;
+            padding: 12px 35px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-crear:hover {
+            background: #0A3275;
+        }
+
+        /* BARRA DE BÚSQUEDA */
+        .search-section {
+            background: #0D47A1;
+            padding: 30px 60px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 18px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .search-input::placeholder {
+            color: #666;
+        }
+
+        .location-select {
+            padding: 18px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: white;
+            cursor: pointer;
+            min-width: 250px;
+            font-weight: 500;
+            outline: none;
+        }
+
+        .btn-buscar {
+            background: #0D47A1;
+            color: white;
+            border: 3px solid white;
+            padding: 16px 50px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-buscar:hover {
+            background: #0A3275;
+        }
+
+        /* NAVEGACIÓN */
+        .main-nav {
+            background: #0D47A1;
+            padding: 0 60px 30px;
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-btn {
+            background: white;
+            border: none;
+            padding: 16px 28px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #0D47A1;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-icon {
+            font-size: 1.4rem;
+        }
+
+        /* CONTENIDO PRINCIPAL */
+        .main-content {
+            display: grid;
+            grid-template-columns: 370px 1fr;
+            gap: 30px;
+            padding: 30px 60px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* SIDEBAR PERFIL */
+        .sidebar {
+            height: fit-content;
+        }
+
+        .profile-card {
+            background: white;
+            border-radius: 20px;
+            padding: 35px 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .profile-avatar {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin: 0 auto 25px;
+            border: 4px solid #0D47A1;
+        }
+
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-greeting {
+            text-align: center;
+            color: #0D47A1;
+            font-size: 1.7rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+        }
+
+        .profile-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 14px 12px;
+            color: #0D47A1;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s;
+            font-weight: 500;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .menu-item:hover {
+            background: #f0f0f0;
+        }
+
+        .menu-icon {
+            font-size: 1.4rem;
+        }
+
+        .points-badge {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: #FFC107;
+            border-radius: 10px;
+            color: #0D47A1;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .points-icon {
+            font-size: 1.5rem;
+        }
+
+        .btn-salir {
+            width: 100%;
+            padding: 16px;
+            background: #0D47A1;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-salir:hover {
+            background: #0A3275;
+        }
+
+        /* ÁREA DE CONTENIDO */
+        .content-area {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        /* BANNER PRINCIPAL */
+        .banner {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .banner-map {
+            background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 50%, #A5D6A7 100%);
+            padding: 40px;
+            position: relative;
+        }
+
+        .map-illustration {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            min-height: 350px;
+            background-image: 
+                linear-gradient(to right, rgba(255,255,255,0.3) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,0.3) 1px, transparent 1px);
+            background-size: 50px 50px;
+            border-radius: 15px;
+        }
+
+        .flag-argentina {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            font-size: 4rem;
+            filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.2));
+        }
+
+        .tienda {
+            position: absolute;
+            font-size: 3.5rem;
+            filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.2));
+        }
+
+        .tienda-1 {
+            top: 35%;
+            left: 20%;
+        }
+
+        .tienda-2 {
+            bottom: 35%;
+            left: 45%;
+        }
+
+        .tienda-3 {
+            top: 50%;
+            right: 25%;
+        }
+
+        .trees {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            font-size: 2rem;
+        }
+
+        .banner-text {
+            background: #0D47A1;
+            color: white;
+            padding: 50px 45px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .banner-text h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .texto-amarillo {
+            color: #FFC107;
+        }
+
+        .banner-text p {
+            font-size: 1.2rem;
+            margin-bottom: 35px;
+            opacity: 0.95;
+        }
+
+        .btn-explorar {
+            background: #1565C0;
+            color: white;
+            border: none;
+            padding: 18px 0;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .btn-explorar:hover {
+            background: #0D47A1;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* MODOS DE EXPLORACIÓN */
+        .modos-exploracion {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .modo-card {
+            padding: 70px 50px;
+            border-radius: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .modo-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .modo-caminar {
+            background: #FFC107;
+            border: 4px solid #0D47A1;
+        }
+
+        .modo-auto {
+            background: #0D47A1;
+            color: white;
+        }
+
+        .modo-icon {
+            font-size: 6rem;
+            display: block;
+            margin-bottom: 20px;
+        }
+
+        .modo-card h3 {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .banner {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 15px 20px;
+            }
+            
+            .logo {
+                font-size: 1.8rem;
+            }
+            
+            .search-section {
+                padding: 20px;
+                flex-direction: column;
+            }
+            
+            .main-nav {
+                padding: 0 20px 20px;
+                flex-wrap: wrap;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+            
+            .modos-exploracion {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            Made in <span class="logo-badge">Argentina</span> 🇦🇷
+        </div>
+        <div class="header-buttons">
+            <button class="btn-ingresar" onclick="mostrarLogin()">Ingresar</button>
+            <button class="btn-crear" onclick="mostrarRegistro()">Crear Cuenta</button>
+        </div>
+    </header>
+
+    <!-- Barra de búsqueda -->
+    <section class="search-section">
+        <input type="text" class="search-input" placeholder="¿Qué estás buscando?">
+        <select class="location-select">
+            <option>Ubicación: Buenos Aires</option>
+        </select>
+        <button class="btn-buscar" onclick="realizarBusqueda()">Buscar</button>
+    </section>
+
+    <!-- Navegación -->
+    <nav class="main-nav">
+        <button class="nav-btn" onclick="verVendedoresCercanos()">
+            <span class="nav-icon">🏪</span>
+            Vendedores Cercanos
+        </button>
+        <button class="nav-btn" onclick="verOfertasDelBarrio()">
+            <span class="nav-icon">%</span>
+            Ofertas del Barrio
+        </button>
+        <button class="nav-btn" onclick="verFavoritos()">
+            <span class="nav-icon">❤️</span>
+            Favoritos
+        </button>
+        <button class="nav-btn" onclick="verMisRecorridos()">
+            <span class="nav-icon">📍</span>
+            Mis Recorridos
+        </button>
+    </nav>
+
+    <!-- Contenido principal -->
+    <main class="main-content">
+        <!-- Sidebar perfil -->
+        <aside class="sidebar">
+            <div class="profile-card">
+                <div class="profile-avatar">
+                    <img src="https://ui-avatars.com/api/?name=Martin&size=300&background=0D47A1&color=fff&bold=true" alt="Perfil">
+                </div>
+                <h2 class="profile-greeting">¡Hola, Martín!</h2>
+                
+                <div class="profile-menu">
+                    <div class="menu-item" onclick="verMiPerfil()">
+                        <span class="menu-icon">📱</span>
+                        Mi Perfil
+                    </div>
+                    <div class="menu-item" onclick="verHistorial()">
+                        <span class="menu-icon">📋</span>
+                        Historial
+                    </div>
+                    <div class="menu-item" onclick="verMisFavoritos()">
+                        <span class="menu-icon">💙</span>
+                        Mis Favoritos
+                    </div>
+                    <div class="points-badge">
+                        <span class="points-icon">⭐</span>
+                        Puntos: 120
+                    </div>
+                </div>
+                
+                <button class="btn-salir" onclick="cerrarSesion()">Salir</button>
+            </div>
+        </aside>
+
+        <!-- Área de contenido -->
+        <div class="content-area">
+            <!-- Banner principal -->
+            <div class="banner">
+                <div class="banner-map">
+                    <!-- Ilustración del mapa -->
+                    <div class="map-illustration">
+                        <div class="flag-argentina">🇦🇷</div>
+                        <div class="tienda tienda-1">🏪</div>
+                        <div class="tienda tienda-2">🏪</div>
+                        <div class="tienda tienda-3">🏪</div>
+                        <div class="trees">🌳🌳🌳</div>
+                    </div>
+                </div>
+                <div class="banner-text">
+                    <h1>Descubrí lo que se <span class="texto-amarillo">vende</span> cerca tuyo</h1>
+                    <p>Recorré tu barrio y encontrá ofertas locales.</p>
+                    <button class="btn-explorar" onclick="explorarAhora()">Explorar Ahora</button>
+                </div>
+            </div>
+
+            <!-- Modos de exploración -->
+            <div class="modos-exploracion">
+                <div class="modo-card modo-caminar" onclick="activarModoCaminar()">
+                    <span class="modo-icon">🚶</span>
+                    <h3>Modo Caminar</h3>
+                </div>
+                <div class="modo-card modo-auto" onclick="activarModoAuto()">
+                    <span class="modo-icon">🚗</span>
+                    <h3>Modo Auto</h3>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // ============================================
+        // MADE IN ARGENTINA - JavaScript Functions
+        // ============================================
+
+        // Mostrar mensaje de bienvenida
+        console.log('%c🇦🇷 Made in Argentina', 'color: #0D47A1; font-size: 24px; font-weight: bold;');
+        console.log('%cPlataforma de comercio local', 'color: #FFC107; font-size: 14px;');
+
+        // FUNCIONES DEL HEADER
+        function mostrarLogin() {
+            window.location.href = 'login.html';
+        }
+
+        function mostrarRegistro() {
+            window.location.href = 'registro.html';
+        }
+
+        // FUNCIÓN DE BÚSQUEDA
+        function realizarBusqueda() {
+            const busqueda = document.querySelector('.search-input').value;
+            const ubicacion = document.querySelector('.location-select').value;
+            
+            if (busqueda.trim() === '') {
+                alert('⚠️ Por favor ingresa qué estás buscando');
+                return;
+            }
+            
+            alert(`🔍 Buscando: "${busqueda}"\n📍 En: ${ubicacion}\n\n✨ Resultados próximamente...`);
+        }
+
+        // FUNCIONES DE NAVEGACIÓN
+        function verVendedoresCercanos() {
+            alert('🏪 Vendedores Cercanos\n\n📍 Mostrando negocios cerca de tu ubicación...');
+        }
+
+        function verOfertasDelBarrio() {
+            alert('% Ofertas del Barrio\n\n🎉 Descubrí las mejores ofertas locales...');
+        }
+
+        function verFavoritos() {
+            alert('❤️ Mis Favoritos\n\n⭐ Aquí verás tus negocios favoritos...');
+        }
+
+        function verMisRecorridos() {
+            alert('📍 Mis Recorridos\n\n🗺️ Historial de tus rutas guardadas...');
+        }
+
+        // FUNCIONES DEL PERFIL
+        function verMiPerfil() {
+            alert('📱 Mi Perfil\n\n👤 Nombre: Martín\n⭐ Puntos: 120\n📅 Miembro desde: Enero 2026');
+        }
+
+        function verHistorial() {
+            alert('📋 Historial\n\n📜 Últimas búsquedas y actividades...');
+        }
+
+        function verMisFavoritos() {
+            alert('💙 Mis Favoritos\n\n❤️ 5 negocios guardados');
+        }
+
+        function cerrarSesion() {
+            const confirmar = confirm('❓ ¿Estás seguro que deseas cerrar sesión?');
+            
+            if (confirmar) {
+                alert('👋 Sesión cerrada exitosamente\n\n¡Hasta pronto!');
+            }
+        }
+
+        // FUNCIONES DE EXPLORACIÓN
+        function explorarAhora() {
+            alert('🗺️ Explorar Ahora\n\n🎯 Elige un modo de exploración:\n\n🚶 Modo Caminar\n🚗 Modo Auto');
+        }
+
+        function activarModoCaminar() {
+            alert('🚶 Modo Caminar Activado\n\n✓ Vista Street View\n✓ Burbujas informativas\n✓ Guía con chatbot\n\n🎉 ¡Comienza a caminar virtualmente!');
+        }
+
+        function activarModoAuto() {
+            alert('🚗 Modo Auto Activado\n\n✓ Vista desde el auto\n✓ Selección de ventana\n✓ Negocios del lado elegido\n\n🎉 ¡Comienza tu recorrido!');
+        }
+
+        // Permitir búsqueda con Enter
+        document.querySelector('.search-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                realizarBusqueda();
+            }
+        });
+
+        console.log('✅ Todas las funciones cargadas correctamente');
+    </script>
+</body>
+</html>
